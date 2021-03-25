@@ -5,7 +5,7 @@ import './main.css';
 class Crumbs extends EventEmitter {
   constructor() {
     super();
-    this.cookies = [];
+    this.accepted = ['analytics', 'functional', 'targeting'];
     this.banner = null;
     this.editScreen = null;
     this.render();
@@ -30,16 +30,17 @@ class Crumbs extends EventEmitter {
       `;
       document.body.insertAdjacentHTML('beforeend', cookieBanner);
 
-      // Clicking on accept all sets all the cookies and hides the banner
-      const acceptCookies = document.querySelector('.crumbs-accept-all');
-      acceptCookies.addEventListener('click', (e) => {
-        e.preventDefault();
-        this.addCookies(this.cookies);
-        this.emit('onSave', this.cookies);
-      });
-
       // As we have created this we can have access to it now for removing later
       this.banner = document.querySelector('.crumbs-banner');
+
+      // Clicking on accept all sets all the cookies and hides the banner
+      const acceptCookies = document.querySelector('.crumbs-accept-all');
+      acceptCookies.addEventListener('click', () => {
+        // As we are accepting all, we can send back everything
+        this.setAcceptanceCookie();
+        this.removeBanner(this.banner);
+        this.emit('onSave', this.accepted);
+      });
 
       this.editSettings();
       pubsub.subscribe('cookiesUpdated', (cookie) => {
@@ -80,7 +81,6 @@ class Crumbs extends EventEmitter {
 
       // Set the editScreen property so we have access to hide it later on.
       this.editScreen = document.querySelector('.crumbs-edit');
-      this.emit('onSave', this.cookies);
     });
   }
 
@@ -95,12 +95,26 @@ class Crumbs extends EventEmitter {
   editAccept() {
     const editAccept = document.querySelector('.crumbs-edit-accept');
     editAccept.addEventListener('click', () => {
+      const checkboxes = Array.from(
+        document.querySelectorAll('input[type="checkbox"]')
+      );
+      const accepted = checkboxes
+        .filter((checkbox) => {
+          if (checkbox.checked === true) {
+            return checkbox;
+          }
+        })
+        .map((c) => {
+          return c.id;
+        });
+
       this.removeBanner(this.editScreen);
       this.removeBanner(this.banner);
 
       // Based on the selected checkboxes we will add the relevant cookies
-      window.confirm(`Add the relevant cookies`);
-      this.addCookies(this.cookies);
+      // window.confirm(`Add the relevant cookies`);
+      this.emit('onSave', accepted);
+      // this.setAcceptanceCookie();
     });
   }
 
@@ -140,7 +154,7 @@ class Crumbs extends EventEmitter {
   }
 
   setAcceptanceCookie() {
-    // This hides the cookie banner if we want to select some cookies
+    // This cookie determines if the banner should be hidden or not.
     this.setCookie('cookie_consent', true, 365);
   }
 
@@ -166,6 +180,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Accept all button is pressed
   const c = new Crumbs();
   c.on('onSave', (preferences) => {
-    console.log(preferences);
+    alert(preferences);
   });
 });
