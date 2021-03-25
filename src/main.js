@@ -138,21 +138,6 @@ class Crumbs extends EventEmitter {
     return '';
   }
 
-  addCookies(cookies) {
-    let cookiesList = new Set(this.cookies);
-
-    cookies.forEach((cookie) => {
-      this.setCookie(cookie.name, cookie.value, 365);
-      cookiesList.add(cookie);
-      pubsub.publish('cookiesUpdated', cookie);
-    });
-
-    this.cookies = Array.from(cookiesList);
-    this.setAcceptanceCookie();
-    this.emit('onSave', this.cookies);
-    this.removeBanner(this.banner);
-  }
-
   setAcceptanceCookie() {
     // This cookie determines if the banner should be hidden or not.
     this.setCookie('cookie_consent', true, 365);
