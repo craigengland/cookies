@@ -12,10 +12,12 @@ body {
 
 button {
   appearance: none;
+  background-color: whitesmoke;
   box-shadow: none;
-  border: 0;
+  border: 1px solid gainsboro;
+  border-radius: 4px;
   padding: 1rem;
-  max-width: 150px;
+  max-width: 200px;
 }
 
 .crumbs-banner {
@@ -31,7 +33,6 @@ button {
 }
 
 .crumbs-banner button {
-  border: 1px solid gainsboro;
   color: #333;
   margin: 0 32px;
   padding: 0.8rem 1rem;
@@ -39,8 +40,7 @@ button {
 }
 
 .crumbs-edit {
-  background-color: whitesmoke;
-  border: 1px solid #f9f9f9;
+  background-color: #f4f4f4;
   border-radius: 4px;
   left: 50%;
   padding: 2rem;
