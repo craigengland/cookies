@@ -13,7 +13,7 @@ class Crumbs extends EventEmitter {
 
   render() {
     // Render the Cookie banner if the cookie_consent cookie isn't true
-    if (!this.getCookie('cookie_consent') === true) {
+    if (!this.getCookie('cookie_consent')) {
       // Create the banner itself as a template literal and add it
       // to the DOM, at the end of the body
       const cookieBanner = `
