@@ -49,3 +49,10 @@ button {
   transform: translate(-50%, -50%);
   z-index: 99;
 }
+
+.crumbs-edit-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 8px;
+}

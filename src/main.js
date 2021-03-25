@@ -1,8 +1,10 @@
+import { EventEmitter } from 'events';
 import { pubsub } from './components/pubsub';
 import './main.css';
 
-class Crumbs {
+class Crumbs extends EventEmitter {
   constructor() {
+    super();
     this.cookies = [];
     this.banner = null;
     this.editScreen = null;
@@ -10,18 +12,17 @@ class Crumbs {
   }
 
   render() {
-    // Render the Cookie banner if analytics haven't been accepted
-    // and subscribe to some events
-    if (!this.getCookie('cookie_consent')) {
+    // Render the Cookie banner if the cookie_consent cookie isn't true
+    if (!this.getCookie('cookie_consent') === true) {
       // Create the banner itself as a template literal and add it
       // to the DOM, at the end of the body
       const cookieBanner = `
         <div class="crumbs-banner">
-          <div class="">
+          <div>
             <h4>Cookie Banner</h4>
             <p>Something about accepting cookies</p>
           </div>
-          <div class="">
+          <div>
             <button class="crumbs-edit-settings">Edit settings</button>
             <button class="crumbs-accept-all">Accept Cookies</button>
           </div>
@@ -29,7 +30,15 @@ class Crumbs {
       `;
       document.body.insertAdjacentHTML('beforeend', cookieBanner);
 
-      // Set the banner property so we have access to remove it later
+      // Clicking on accept all sets all the cookies and hides the banner
+      const acceptCookies = document.querySelector('.crumbs-accept-all');
+      acceptCookies.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.addCookies(this.cookies);
+        this.emit('onSave', this.cookies);
+      });
+
+      // As we have created this we can have access to it now for removing later
       this.banner = document.querySelector('.crumbs-banner');
 
       this.editSettings();
@@ -40,12 +49,13 @@ class Crumbs {
   }
 
   editSettings() {
+    // Build the edit modal
     const editSettingsButtons = document.querySelector('.crumbs-edit-settings');
     const editScreen = `
-      <div class="crumbs-edit">
+      <div class="crumbs-edit" role="dialog" aria-labelledby="crumbs-dialog-title" aria-describedby="crumbs-dialog-descrption">
         <button class="crumbs-edit-close">Close</button>
-        <h4>Edit cookie settings</h4>
-        <p>Check the cookies you want to accept</p>
+        <h4 id="crumbs-dialog-title">Edit cookie settings</h4>
+        <p id="crumbs-dialog-description">Check the cookies you want to accept</p>
         <div>
           <label for="functional">Functional</label>
           <input type="checkbox" id="functional" />
@@ -61,12 +71,16 @@ class Crumbs {
         <button class="crumbs-edit-accept" style="margin: 1rem 0">Set cookie preferences</button>
       </div>
     `;
-    editSettingsButtons.addEventListener('click', (e) => {
+
+    // Add the edit cookies modal to the DOM when selected
+    editSettingsButtons.addEventListener('click', () => {
       document.body.insertAdjacentHTML('beforeend', editScreen);
       this.editAccept();
       this.closeEditScreen();
+
       // Set the editScreen property so we have access to hide it later on.
       this.editScreen = document.querySelector('.crumbs-edit');
+      this.emit('onSave', this.cookies);
     });
   }
 
@@ -81,16 +95,12 @@ class Crumbs {
   editAccept() {
     const editAccept = document.querySelector('.crumbs-edit-accept');
     editAccept.addEventListener('click', () => {
-      const functionalCheck = document.querySelector('#functional').checked;
-      const performanceCheck = document.querySelector('#performance').checked;
-      const targetingCheck = document.querySelector('#targeting').checked;
-
       this.removeBanner(this.editScreen);
       this.removeBanner(this.banner);
 
       // Based on the selected checkboxes we will add the relevant cookies
-      // this.addCookies('functional');
-      console.log(`add preferences here to ${this.cookies}`);
+      window.confirm(`Add the relevant cookies`);
+      this.addCookies(this.cookies);
     });
   }
 
@@ -125,6 +135,7 @@ class Crumbs {
 
     this.cookies = Array.from(cookiesList);
     this.setAcceptanceCookie();
+    this.emit('onSave', this.cookies);
     this.removeBanner(this.banner);
   }
 
@@ -154,30 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // A made up array of cookies that we are going to set when the
   // Accept all button is pressed
   const c = new Crumbs();
-  const cookies = [
-    {
-      name: '_ga',
-      value: 'skufksdbfk234234',
-      type: 'functional',
-    },
-    {
-      name: '_fb',
-      value: 'slanfisdnifndiosnfon',
-      type: 'performance',
-    },
-    {
-      name: '_mclarity',
-      value: '1231412ddwq21dqeqwe',
-      type: 'targeting',
-    },
-  ];
-
-  // Select the accept all button and add event listener
-  const acceptCookies = document.querySelector('.crumbs-accept-all');
-  if (acceptCookies) {
-    acceptCookies.addEventListener('click', (e) => {
-      e.preventDefault();
-      c.addCookies(cookies);
-    });
-  }
+  c.on('onSave', (preferences) => {
+    console.log(preferences);
+  });
 });
