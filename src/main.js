@@ -114,7 +114,7 @@ class Crumbs extends EventEmitter {
       // Based on the selected checkboxes we will add the relevant cookies
       // window.confirm(`Add the relevant cookies`);
       this.emit('onSave', accepted);
-      // this.setAcceptanceCookie();
+      this.setAcceptanceCookie();
     });
   }
 
