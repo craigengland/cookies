@@ -24,12 +24,7 @@ module.exports = {
   },
   optimization: {
     minimize: true,
-    minimizer: [
-      new CssMinimizerPlugin(),
-      new TerserPlugin({
-        parallel: true,
-      }),
-    ],
+    minimizer: [new CssMinimizerPlugin()],
   },
   output: {
     path: path.resolve(__dirname, 'dist/'),

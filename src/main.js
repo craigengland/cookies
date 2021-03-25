@@ -1,5 +1,7 @@
 import { EventEmitter } from 'events';
 import { pubsub } from './components/pubsub';
+import { editScreen } from './components/editScreen';
+import { cookieBanner } from './components/cookieBanner';
 import './main.css';
 
 class Crumbs extends EventEmitter {
@@ -11,23 +13,14 @@ class Crumbs extends EventEmitter {
     this.render();
   }
 
+  /**
+   * Render the cookie banner if cookie_consent !== true
+   */
   render() {
     // Render the Cookie banner if the cookie_consent cookie isn't true
     if (!this.getCookie('cookie_consent')) {
       // Create the banner itself as a template literal and add it
       // to the DOM, at the end of the body
-      const cookieBanner = `
-        <div class="crumbs-banner">
-          <div>
-            <h4>Cookie Banner</h4>
-            <p>Something about accepting cookies</p>
-          </div>
-          <div>
-            <button class="crumbs-edit-settings">Edit settings</button>
-            <button class="crumbs-accept-all">Accept Cookies</button>
-          </div>
-        </div>
-      `;
       document.body.insertAdjacentHTML('beforeend', cookieBanner);
 
       // As we have created this we can have access to it now for removing later
@@ -43,35 +36,16 @@ class Crumbs extends EventEmitter {
       });
 
       this.editSettings();
-      pubsub.subscribe('cookiesUpdated', (cookie) => {
-        window.confirm(`${cookie.name}, ${cookie.value} has been added`);
-      });
+      pubsub.subscribe('cookiesUpdated');
     }
   }
 
+  /**
+   * Add the editScreen component when the 'Edit Settings' button is clicked
+   */
   editSettings() {
     // Build the edit modal
     const editSettingsButtons = document.querySelector('.crumbs-edit-settings');
-    const editScreen = `
-      <div class="crumbs-edit" role="dialog" aria-labelledby="crumbs-dialog-title" aria-describedby="crumbs-dialog-descrption">
-        <button class="crumbs-edit-close">Close</button>
-        <h4 id="crumbs-dialog-title">Edit cookie settings</h4>
-        <p id="crumbs-dialog-description">Check the cookies you want to accept</p>
-        <div>
-          <label for="functional">Functional</label>
-          <input type="checkbox" id="functional" />
-        </div>
-        <div>
-          <label for="performance">Performance</label>
-          <input type="checkbox" id="performance" />
-        </div>
-        <div>
-          <label for="targeting">Targeting</label>
-          <input type="checkbox" id="targeting" />
-        </div>
-        <button class="crumbs-edit-accept" style="margin: 1rem 0">Set cookie preferences</button>
-      </div>
-    `;
 
     // Add the edit cookies modal to the DOM when selected
     editSettingsButtons.addEventListener('click', () => {
@@ -84,6 +58,9 @@ class Crumbs extends EventEmitter {
     });
   }
 
+  /**
+   * Close the edit screen (not destroy)
+   */
   closeEditScreen() {
     const editScreen = document.querySelector('.crumbs-edit');
     const editClose = document.querySelector('.crumbs-edit-close');
@@ -92,6 +69,10 @@ class Crumbs extends EventEmitter {
     });
   }
 
+  /**
+   * Emits the onSave event when preferences are set and provides a stringed array back to the
+   * consumer to determine which cookies have been selected
+   */
   editAccept() {
     const editAccept = document.querySelector('.crumbs-edit-accept');
     editAccept.addEventListener('click', () => {
@@ -113,10 +94,16 @@ class Crumbs extends EventEmitter {
 
       // Based on the selected checkboxes we will add the relevant cookies
       this.emit('onSave', accepted);
+      pubsub.publish('cookiesUpdated', accepted);
       this.setAcceptanceCookie();
     });
   }
 
+  /**
+   * Find out if the cookie_consent cookie is set
+   * @param  {String} cookieName The name of the cookie we are checking
+   * @returns {Boolean}
+   */
   getCookie(cookieName) {
     const name = cookieName + '=';
     const decodedCookie = decodeURIComponent(document.cookie);
@@ -137,16 +124,29 @@ class Crumbs extends EventEmitter {
     return '';
   }
 
+  /**
+   * Set the cookie_consent cookie that determines whether the banner is shown or not
+   */
   setAcceptanceCookie() {
     // This cookie determines if the banner should be hidden or not.
     this.setCookie('cookie_consent', true, 365);
   }
 
+  /**
+   * Remove an element from the view
+   * @param  {Node} banner The banner we wish to remove
+   */
   removeBanner(banner) {
     banner.remove();
     pubsub.unsubscribe('cookiesUpdated');
   }
 
+  /**
+   * Set a cookie for a certain amount of time
+   * @param  {String} name The name of the cookie
+   * @param  {String} value The value to assign the cookie
+   * @param  {Number} days The number of days the cookie should be set for before expiring (max-age)
+   */
   setCookie(name, value, days) {
     let maxAge = '';
     if (days) {
@@ -157,13 +157,22 @@ class Crumbs extends EventEmitter {
   }
 }
 
+//
 // This is us consuming the library in a project
+//
 
 document.addEventListener('DOMContentLoaded', () => {
   // A made up array of cookies that we are going to set when the
   // Accept all button is pressed
   const c = new Crumbs();
+  const acceptedCookies = document.querySelector('#accepted-cookies');
+
   c.on('onSave', (preferences) => {
-    alert(preferences);
+    // Add the preferences to a fake list on the page
+    preferences.forEach((preference) => {
+      const li = document.createElement('li');
+      li.textContent = preference;
+      acceptedCookies.append(li);
+    });
   });
 });
