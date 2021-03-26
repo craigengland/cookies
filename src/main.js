@@ -162,8 +162,6 @@ class Crumbs extends EventEmitter {
 //
 
 document.addEventListener('DOMContentLoaded', () => {
-  // A made up array of cookies that we are going to set when the
-  // Accept all button is pressed
   const c = new Crumbs();
   const acceptedCookies = document.querySelector('#accepted-cookies');
 
