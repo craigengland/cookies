@@ -59,12 +59,12 @@ button {
   padding: 8px;
 }
 
-#accepted-cookies {
+.accepted-cookies {
   list-style-type: none;
   text-align: center;
 }
 
-#accepted-cookies li {
+.accepted-cookies li {
   background-color: ghostwhite;
   margin: 4px auto;
   max-width: 150px;

@@ -62,10 +62,9 @@ class Crumbs extends EventEmitter {
    * Close the edit screen (not destroy)
    */
   closeEditScreen() {
-    const editScreen = document.querySelector('.crumbs-edit');
     const editClose = document.querySelector('.crumbs-edit-close');
     editClose.addEventListener('click', () => {
-      editScreen.remove();
+      this.editScreen.remove();
     });
   }
 
@@ -128,7 +127,6 @@ class Crumbs extends EventEmitter {
    * Set the cookie_consent cookie that determines whether the banner is shown or not
    */
   setAcceptanceCookie() {
-    // This cookie determines if the banner should be hidden or not.
     this.setCookie('cookie_consent', true, 365);
   }
 
@@ -163,7 +161,7 @@ class Crumbs extends EventEmitter {
 
 document.addEventListener('DOMContentLoaded', () => {
   const c = new Crumbs();
-  const acceptedCookies = document.querySelector('#accepted-cookies');
+  const acceptedCookies = document.querySelector('.accepted-cookies');
 
   c.on('onSave', (preferences) => {
     // Add the preferences to a fake list on the page
